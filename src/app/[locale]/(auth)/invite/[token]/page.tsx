@@ -9,6 +9,15 @@ interface InvitePageProps {
   searchParams: Promise<{ role?: string; type?: string }>;
 }
 
+interface Invitation {
+  token: string;
+  accepted_at: string | null;
+  expires_at: string;
+  type: string;
+  entity_id: string;
+  email: string;
+}
+
 export default async function InvitePage({ params, searchParams }: InvitePageProps) {
   const { locale, token } = await params;
   const { type } = await searchParams;
@@ -16,12 +25,13 @@ export default async function InvitePage({ params, searchParams }: InvitePagePro
   const supabase = await createClient();
   const adminSupabase = await createAdminClient();
 
-  // Récupérer l'invitation
-  const { data: invitation } = await adminSupabase
+  const { data: invitationRaw } = await (adminSupabase as any)
     .from("invitations")
     .select("*")
     .eq("token", token)
     .single();
+
+  const invitation = invitationRaw as Invitation | null;
 
   if (!invitation || invitation.accepted_at) {
     return (
@@ -71,51 +81,47 @@ export default async function InvitePage({ params, searchParams }: InvitePagePro
     );
   }
 
-  // Vérifier si l'utilisateur est connecté
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    // Rediriger vers le login avec le token
     redirect(`/${locale}/login?redirectTo=/${locale}/invite/${token}`);
   }
 
-  // Accepter l'invitation
-  await adminSupabase
+  await (adminSupabase as any)
     .from("invitations")
-    .update({ accepted_at: new Date().toISOString() })
+    .update({ accepted_at: new Date().toISOString() } as any)
     .eq("token", token);
 
-  // Traiter selon le type
   if (invitation.type === "participant") {
-    await adminSupabase
+    await (adminSupabase as any)
       .from("participants")
       .update({
         user_id: user.id,
         status: "registered",
         registered_at: new Date().toISOString(),
-      })
+      } as any)
       .eq("event_id", invitation.entity_id)
       .eq("email", invitation.email);
 
     redirect(`/${locale}/my-events/${invitation.entity_id}`);
   } else if (invitation.type === "space_member") {
-    await adminSupabase
+    await (adminSupabase as any)
       .from("space_members")
       .update({
         user_id: user.id,
         accepted_at: new Date().toISOString(),
-      })
+      } as any)
       .eq("space_id", invitation.entity_id)
       .eq("email", invitation.email);
 
     redirect(`/${locale}/spaces`);
   } else if (invitation.type === "jury") {
-    await adminSupabase
+    await (adminSupabase as any)
       .from("jury_members")
       .update({
         user_id: user.id,
         accepted_at: new Date().toISOString(),
-      })
+      } as any)
       .eq("event_id", invitation.entity_id)
       .eq("email", invitation.email);
 
