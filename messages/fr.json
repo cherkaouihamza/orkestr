@@ -101,7 +101,11 @@
     "onboardingDescription": "Configurez votre espace de travail en quelques étapes",
     "onboardingStep1": "Créer votre espace",
     "onboardingStep2": "Configurer votre premier événement",
-    "onboardingStep3": "Inviter votre équipe"
+    "onboardingStep3": "Inviter votre équipe",
+    "emailAlreadyExists": "Un compte existe déjà avec cet email",
+    "emailConfirmTitle": "Vérifiez votre email",
+    "emailConfirmDescription": "Un lien de confirmation a été envoyé à",
+    "emailConfirmHint": "Déjà un compte ?"
   },
   "spaces": {
     "title": "Mes espaces",
@@ -363,6 +367,35 @@
     "timeLeft": "Temps restant",
     "score": "Votre score",
     "ranking": "Votre classement"
+  },
+  "onboarding": {
+    "welcome": "Bienvenue sur ORKESTR",
+    "welcomeSubtitle": "Configurons votre espace de travail en 2 étapes",
+    "step1": {
+      "label": "Votre espace",
+      "title": "Créez votre premier espace",
+      "subtitle": "Un espace regroupe vos événements et vos collaborateurs.",
+      "spaceName": "Nom de l'espace",
+      "spaceDescription": "Description",
+      "nameError": "Le nom doit comporter au moins 2 caractères",
+      "cta": "Créer mon espace",
+      "skip": "Passer cette étape"
+    },
+    "step2": {
+      "label": "C'est parti !",
+      "title": "Vous êtes prêt !",
+      "spaceCreated": "Votre espace",
+      "spaceCreatedSuffix": "a bien été créé.",
+      "noSpace": "Vous pouvez créer un espace à tout moment depuis le tableau de bord.",
+      "nextStepsLabel": "Prochaines étapes suggérées",
+      "action1Title": "Créer un événement",
+      "action1Desc": "Lancez un hackathon, bootcamp ou programme en quelques minutes.",
+      "action2Title": "Inviter des collaborateurs",
+      "action2Desc": "Ajoutez des membres à votre espace pour travailler en équipe.",
+      "action3Title": "Explorer votre espace",
+      "action3Desc": "Découvrez toutes les fonctionnalités disponibles dans votre tableau de bord.",
+      "cta": "Accéder à mon espace"
+    }
   },
   "errors": {
     "notFound": "Page introuvable",

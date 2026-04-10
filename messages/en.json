@@ -101,7 +101,11 @@
     "onboardingDescription": "Set up your workspace in a few steps",
     "onboardingStep1": "Create your space",
     "onboardingStep2": "Set up your first event",
-    "onboardingStep3": "Invite your team"
+    "onboardingStep3": "Invite your team",
+    "emailAlreadyExists": "An account already exists with this email",
+    "emailConfirmTitle": "Check your email",
+    "emailConfirmDescription": "A confirmation link has been sent to",
+    "emailConfirmHint": "Already have an account?"
   },
   "spaces": {
     "title": "My spaces",
@@ -363,6 +367,35 @@
     "timeLeft": "Time left",
     "score": "Your score",
     "ranking": "Your ranking"
+  },
+  "onboarding": {
+    "welcome": "Welcome to ORKESTR",
+    "welcomeSubtitle": "Let's set up your workspace in 2 steps",
+    "step1": {
+      "label": "Your space",
+      "title": "Create your first workspace",
+      "subtitle": "A workspace groups your events and collaborators together.",
+      "spaceName": "Workspace name",
+      "spaceDescription": "Description",
+      "nameError": "Name must be at least 2 characters",
+      "cta": "Create my workspace",
+      "skip": "Skip this step"
+    },
+    "step2": {
+      "label": "Let's go!",
+      "title": "You're all set!",
+      "spaceCreated": "Your workspace",
+      "spaceCreatedSuffix": "has been created.",
+      "noSpace": "You can create a workspace anytime from the dashboard.",
+      "nextStepsLabel": "Suggested next steps",
+      "action1Title": "Create an event",
+      "action1Desc": "Launch a hackathon, bootcamp or program in minutes.",
+      "action2Title": "Invite collaborators",
+      "action2Desc": "Add members to your workspace to collaborate as a team.",
+      "action3Title": "Explore your workspace",
+      "action3Desc": "Discover all the features available in your dashboard.",
+      "cta": "Go to my workspace"
+    }
   },
   "errors": {
     "notFound": "Page not found",

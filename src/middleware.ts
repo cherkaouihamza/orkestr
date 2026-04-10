@@ -5,6 +5,7 @@ import { createServerClient } from "@supabase/ssr";
 
 const intlMiddleware = createMiddleware(routing);
 
+// Routes accessibles sans authentification
 const publicRoutes = ["/", "/login", "/register", "/invite"];
 
 function isPublicRoute(pathname: string): boolean {
@@ -14,10 +15,14 @@ function isPublicRoute(pathname: string): boolean {
   );
 }
 
+function strippedPathname(pathname: string): string {
+  return pathname.replace(/^\/(fr|en)/, "") || "/";
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for API routes and static files
+  // Skip API routes and static files
   if (
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
@@ -26,68 +31,85 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Handle i18n routing
   const intlResponse = intlMiddleware(request);
 
-  // Check auth for protected routes
-  const isPublic = isPublicRoute(pathname);
-  if (!isPublic) {
-    const response = intlResponse || NextResponse.next();
+  if (isPublicRoute(pathname)) {
+    return intlResponse;
+  }
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options)
-            );
-          },
+  // ── Route protégée : créer le client Supabase ──────────────────────────────
+  const response = intlResponse || NextResponse.next();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
         },
-      }
-    );
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      const locale = pathname.split("/")[1] || "fr";
-      const loginUrl = new URL(`/${locale}/login`, request.url);
-      loginUrl.searchParams.set("redirectTo", pathname);
-      return NextResponse.redirect(loginUrl);
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
     }
+  );
 
-    // Redirection intelligente depuis la racine locale (/) ou /spaces
-    const strippedPath = pathname.replace(/^\/(fr|en)/, "") || "/";
-    if (strippedPath === "/" || strippedPath === "/spaces") {
-      const locale = pathname.split("/")[1] || "fr";
+  const { data: { user } } = await supabase.auth.getUser();
 
-      // Vérifier si l'user est membre d'un espace (organisateur)
-      const { count } = await supabase
-        .from("space_members")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id);
+  // Non authentifié → login
+  if (!user) {
+    const locale = pathname.split("/")[1] || "fr";
+    const loginUrl = new URL(`/${locale}/login`, request.url);
+    loginUrl.searchParams.set("redirectTo", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
 
-      if (!count || count === 0) {
-        // Pas membre d'un espace → participant → rediriger vers my-events
-        return NextResponse.redirect(new URL(`/${locale}/my-events`, request.url));
-      }
+  const locale = pathname.split("/")[1] || "fr";
+  const stripped = strippedPathname(pathname);
 
-      // Organisateur sur la racine → rediriger vers /spaces
-      if (strippedPath === "/") {
-        return NextResponse.redirect(new URL(`/${locale}/spaces`, request.url));
-      }
-    }
-
+  // ── /onboarding : pas de redirection onboarding_completed ─────────────────
+  // (l'user est auth et on le laisse passer librement sur cette route)
+  if (stripped === "/onboarding") {
     return response;
   }
 
-  return intlResponse;
+  // ── Toute autre route : vérifier onboarding_completed ─────────────────────
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("onboarding_completed")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.onboarding_completed === false) {
+    return NextResponse.redirect(new URL(`/${locale}/onboarding`, request.url));
+  }
+
+  // ── /spaces : rediriger vers /my-events si l'user n'est PAS organisateur ──
+  // Un organisateur = membre d'un espace OU créateur d'un espace.
+  // On vérifie les deux pour couvrir le cas d'un user qui a skippé la création
+  // d'espace en onboarding (pas encore dans space_members).
+  if (stripped === "/spaces") {
+    const [{ count: memberCount }, { count: ownerCount }] = await Promise.all([
+      supabase
+        .from("space_members")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id),
+      supabase
+        .from("spaces")
+        .select("id", { count: "exact", head: true })
+        .eq("created_by", user.id),
+    ]);
+
+    const isOrganizer = (memberCount ?? 0) > 0 || (ownerCount ?? 0) > 0;
+    if (!isOrganizer) {
+      return NextResponse.redirect(new URL(`/${locale}/my-events`, request.url));
+    }
+  }
+
+  return response;
 }
 
 export const config = {
