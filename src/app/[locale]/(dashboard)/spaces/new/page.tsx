@@ -59,6 +59,7 @@ export default function NewSpacePage({ params }: { params: Promise<{ locale: str
         .single();
 
       if (error) {
+        console.error("Supabase error:", error);
         toast({ title: tCommon("errorOccurred"), variant: "destructive" });
         return;
       }

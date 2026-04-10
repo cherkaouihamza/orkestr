@@ -26,7 +26,6 @@ export default async function SpacesPage({ params }: SpacesPageProps) {
       space_members(*),
       events(id, status)
     `)
-    .or(`created_by.eq.${user?.id},space_members.user_id.eq.${user?.id}`)
     .order("created_at", { ascending: false });
 
   return (
