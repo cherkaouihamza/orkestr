@@ -62,6 +62,28 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
+    // Redirection intelligente depuis la racine locale (/) ou /spaces
+    const strippedPath = pathname.replace(/^\/(fr|en)/, "") || "/";
+    if (strippedPath === "/" || strippedPath === "/spaces") {
+      const locale = pathname.split("/")[1] || "fr";
+
+      // Vérifier si l'user est membre d'un espace (organisateur)
+      const { count } = await supabase
+        .from("space_members")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+
+      if (!count || count === 0) {
+        // Pas membre d'un espace → participant → rediriger vers my-events
+        return NextResponse.redirect(new URL(`/${locale}/my-events`, request.url));
+      }
+
+      // Organisateur sur la racine → rediriger vers /spaces
+      if (strippedPath === "/") {
+        return NextResponse.redirect(new URL(`/${locale}/spaces`, request.url));
+      }
+    }
+
     return response;
   }
 

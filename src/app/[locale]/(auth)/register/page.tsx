@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
@@ -33,7 +33,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function RegisterPage({ params }: { params: Promise<{ locale: string }> }) {
   const t = useTranslations("auth");
   const router = useRouter();
-  const [locale] = useState("fr");
+  const { locale } = useParams<{ locale: string }>();
   const [isLoading, setIsLoading] = useState(false);
 
   const {

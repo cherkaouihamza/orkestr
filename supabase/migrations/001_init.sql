@@ -518,6 +518,64 @@ CREATE POLICY "evaluations_select" ON evaluations
     )
   );
 
+-- Team members: vus par les organisateurs et les participants/jurés de l'événement
+CREATE POLICY "team_members_select" ON team_members
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM teams t
+      JOIN events e ON e.id = t.event_id
+      JOIN spaces s ON s.id = e.space_id
+      WHERE t.id = team_members.team_id AND (
+        s.created_by = auth.uid() OR
+        EXISTS (SELECT 1 FROM space_members WHERE space_id = s.id AND user_id = auth.uid()) OR
+        EXISTS (SELECT 1 FROM participants WHERE event_id = e.id AND user_id = auth.uid()) OR
+        EXISTS (SELECT 1 FROM jury_members WHERE event_id = e.id AND user_id = auth.uid())
+      )
+    )
+  );
+
+-- Team members: seuls les organisateurs peuvent ajouter des membres
+CREATE POLICY "team_members_insert" ON team_members
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM teams t
+      JOIN events e ON e.id = t.event_id
+      JOIN spaces s ON s.id = e.space_id
+      WHERE t.id = team_members.team_id AND (
+        s.created_by = auth.uid() OR
+        EXISTS (SELECT 1 FROM space_members WHERE space_id = s.id AND user_id = auth.uid())
+      )
+    )
+  );
+
+-- Team members: seuls les organisateurs peuvent modifier
+CREATE POLICY "team_members_update" ON team_members
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM teams t
+      JOIN events e ON e.id = t.event_id
+      JOIN spaces s ON s.id = e.space_id
+      WHERE t.id = team_members.team_id AND (
+        s.created_by = auth.uid() OR
+        EXISTS (SELECT 1 FROM space_members WHERE space_id = s.id AND user_id = auth.uid())
+      )
+    )
+  );
+
+-- Team members: seuls les organisateurs peuvent supprimer
+CREATE POLICY "team_members_delete" ON team_members
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM teams t
+      JOIN events e ON e.id = t.event_id
+      JOIN spaces s ON s.id = e.space_id
+      WHERE t.id = team_members.team_id AND (
+        s.created_by = auth.uid() OR
+        EXISTS (SELECT 1 FROM space_members WHERE space_id = s.id AND user_id = auth.uid())
+      )
+    )
+  );
+
 -- Notifications: visibles uniquement par le destinataire
 CREATE POLICY "notifications_select_own" ON notifications
   FOR SELECT USING (

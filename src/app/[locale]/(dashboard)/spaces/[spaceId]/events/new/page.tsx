@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,22 +38,13 @@ const EVENT_TYPES: Array<{
   { value: "programme", icon: LayoutGrid, color: "text-purple-500" },
 ];
 
-export default function NewEventPage({
-  params,
-}: {
-  params: Promise<{ locale: string; spaceId: string }>;
-}) {
+export default function NewEventPage() {
   const t = useTranslations("events");
   const tCommon = useTranslations("common");
   const router = useRouter();
-  const [locale] = useState("fr");
-  const [spaceId, setSpaceId] = useState("");
+  const { locale, spaceId } = useParams<{ locale: string; spaceId: string }>();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<EventType>("hackathon");
-
-  params.then(({ locale: l, spaceId: s }) => {
-    setSpaceId(s);
-  });
 
   const {
     register,

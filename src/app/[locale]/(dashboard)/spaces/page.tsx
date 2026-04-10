@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import type { Space } from "@/types/database";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Plus, Building2, Calendar, Users } from "lucide-react";
@@ -19,14 +20,16 @@ export default async function SpacesPage({ params }: SpacesPageProps) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: spaces } = await supabase
+  const spacesResult = await supabase
     .from("spaces")
-    .select(`
-      *,
-      space_members(*),
-      events(id, status)
-    `)
+    .select("*")
     .order("created_at", { ascending: false });
+
+  const spaces = spacesResult.data as Space[] | null;
+  const error = spacesResult.error;
+
+  console.log("spaces data:", spaces, "user:", user?.id);
+  console.log("supabase error:", error);
 
   return (
     <div>
@@ -62,14 +65,9 @@ export default async function SpacesPage({ params }: SpacesPageProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {spaces.map((space) => {
-            const activeEvents =
-              (space.events as Array<{ id: string; status: string }>)?.filter(
-                (e) => e.status === "active"
-              ).length ?? 0;
-            const totalEvents =
-              (space.events as Array<{ id: string; status: string }>)?.length ?? 0;
-            const memberCount =
-              (space.space_members as Array<{ id: string }>)?.length ?? 0;
+            const activeEvents = 0;
+            const totalEvents = 0;
+            const memberCount = 0;
 
             return (
               <Link key={space.id} href={`/${locale}/spaces/${space.id}`}>

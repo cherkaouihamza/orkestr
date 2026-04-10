@@ -40,12 +40,12 @@ export default async function ParticipantEventPage({ params }: ParticipantEventP
 
   if (!event) notFound();
 
-  // Trouver l'équipe du participant (hackathon)
+  // Trouver l'équipe du participant (hackathon) — null si pas d'équipe
   const { data: teamMembership } = await supabase
     .from("team_members")
     .select("team_id, teams(id, name)")
     .eq("participant_id", participant.id)
-    .single();
+    .maybeSingle();
 
   // Jalons + soumissions
   const { data: milestones } = await supabase

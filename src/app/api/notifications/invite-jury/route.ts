@@ -11,7 +11,38 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createAdminClient();
+
+    // Vérification auth
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Vérification droits : l'user doit être space_owner ou space_member de l'espace de l'événement
+    const { data: event } = await supabase
+      .from("events")
+      .select("space_id, profiles!events_created_by_fkey(first_name, last_name)")
+      .eq("id", eventId)
+      .single();
+
+    if (!event) {
+      return NextResponse.json({ error: "Event not found" }, { status: 404 });
+    }
+
+    const { data: space } = await supabase
+      .from("spaces")
+      .select("created_by, space_members(user_id)")
+      .eq("id", event.space_id)
+      .single();
+
+    const isOwner = space?.created_by === user.id;
+    const isMember = (space?.space_members as Array<{ user_id: string }> | null)?.some(
+      (m) => m.user_id === user.id
+    );
+
+    if (!isOwner && !isMember) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     await supabase.from("invitations").upsert({
       token,
@@ -19,14 +50,8 @@ export async function POST(request: NextRequest) {
       type: "jury",
       entity_id: eventId,
       role: "jury",
-      invited_by: user?.id ?? "system",
+      invited_by: user.id,
     });
-
-    const { data: event } = await supabase
-      .from("events")
-      .select("profiles!events_created_by_fkey(first_name, last_name)")
-      .eq("id", eventId)
-      .single();
 
     const organizer = (event?.profiles as { first_name?: string; last_name?: string } | null);
     const organizerName = organizer

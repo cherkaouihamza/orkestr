@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,7 +28,7 @@ export default function NewSpacePage({ params }: { params: Promise<{ locale: str
   const t = useTranslations("spaces");
   const tCommon = useTranslations("common");
   const router = useRouter();
-  const [locale] = useState("fr");
+  const { locale } = useParams<{ locale: string }>();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
