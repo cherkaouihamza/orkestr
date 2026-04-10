@@ -29,11 +29,6 @@ export function Sidebar({ locale }: SidebarProps) {
       icon: Building2,
       label: t("spaces"),
     },
-    {
-      href: `/${locale}/settings`,
-      icon: Settings,
-      label: t("settings"),
-    },
   ];
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
