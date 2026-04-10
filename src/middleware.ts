@@ -5,7 +5,7 @@ import { createServerClient } from "@supabase/ssr";
 
 const intlMiddleware = createMiddleware(routing);
 
-const publicRoutes = ["/login", "/register", "/invite"];
+const publicRoutes = ["/", "/login", "/register", "/invite"];
 
 function isPublicRoute(pathname: string): boolean {
   const strippedPath = pathname.replace(/^\/(fr|en)/, "") || "/";
