@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 
+export const revalidate = 0;
+
 interface SpacesPageProps {
   params: Promise<{ locale: string }>;
 }
@@ -18,18 +20,27 @@ export default async function SpacesPage({ params }: SpacesPageProps) {
   const tEvents = await getTranslations("events");
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
-
-  const spacesResult = await supabase
+  const { data: spacesData } = await supabase
     .from("spaces")
     .select("*")
     .order("created_at", { ascending: false });
 
-  const spaces = spacesResult.data as Space[] | null;
-  const error = spacesResult.error;
+  const spaces = (spacesData ?? []) as Space[];
 
-  console.log("spaces data:", spaces, "user:", user?.id);
-  console.log("supabase error:", error);
+  // Fetch counts for all spaces in parallel
+  const enriched = await Promise.all(
+    spaces.map(async (space) => {
+      const [{ data: events }, { data: members }] = await Promise.all([
+        supabase.from("events").select("id, status").eq("space_id", space.id),
+        supabase.from("space_members").select("id").eq("space_id", space.id),
+      ]);
+      const eventRows = (events ?? []) as Array<{ id: string; status: string }>;
+      const totalEvents = eventRows.length;
+      const activeEvents = eventRows.filter((e) => e.status === "active").length;
+      const memberCount = members?.length ?? 0;
+      return { space, totalEvents, activeEvents, memberCount };
+    })
+  );
 
   return (
     <div>
@@ -48,7 +59,7 @@ export default async function SpacesPage({ params }: SpacesPageProps) {
         </Button>
       </div>
 
-      {!spaces || spaces.length === 0 ? (
+      {spaces.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="w-16 h-16 bg-neutral-200 rounded-full flex items-center justify-center mb-4">
             <Building2 className="h-8 w-8 text-neutral-400" />
@@ -64,60 +75,54 @@ export default async function SpacesPage({ params }: SpacesPageProps) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {spaces.map((space) => {
-            const activeEvents = 0;
-            const totalEvents = 0;
-            const memberCount = 0;
-
-            return (
-              <Link key={space.id} href={`/${locale}/spaces/${space.id}`}>
-                <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="w-12 h-12 bg-primary-900 rounded-xl flex items-center justify-center mb-3">
-                        {space.logo_url ? (
-                          <img
-                            src={space.logo_url}
-                            alt={space.name}
-                            className="w-full h-full object-cover rounded-xl"
-                          />
-                        ) : (
-                          <Building2 className="h-6 w-6 text-white" />
-                        )}
-                      </div>
-                      {activeEvents > 0 && (
-                        <Badge variant="success">
-                          {activeEvents} {tEvents("statuses.active")}
-                        </Badge>
+          {enriched.map(({ space, totalEvents, activeEvents, memberCount }) => (
+            <Link key={space.id} href={`/${locale}/spaces/${space.id}`}>
+              <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="w-12 h-12 bg-primary-900 rounded-xl flex items-center justify-center mb-3">
+                      {space.logo_url ? (
+                        <img
+                          src={space.logo_url}
+                          alt={space.name}
+                          className="w-full h-full object-cover rounded-xl"
+                        />
+                      ) : (
+                        <Building2 className="h-6 w-6 text-white" />
                       )}
                     </div>
-                    <CardTitle className="text-base">{space.name}</CardTitle>
-                    {space.description && (
-                      <CardDescription className="line-clamp-2">
-                        {space.description}
-                      </CardDescription>
+                    {activeEvents > 0 && (
+                      <Badge variant="success">
+                        {activeEvents} {tEvents("statuses.active")}
+                      </Badge>
                     )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-4 text-sm text-neutral-500">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {t("events", { count: totalEvents })}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        {t("members")} ({memberCount})
-                      </span>
-                    </div>
-                    <p className="text-xs text-neutral-400 mt-2">
-                      {locale === "fr" ? "Créé le" : "Created"}{" "}
-                      {formatDate(space.created_at, locale as "fr" | "en")}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
+                  </div>
+                  <CardTitle className="text-base">{space.name}</CardTitle>
+                  {space.description && (
+                    <CardDescription className="line-clamp-2">
+                      {space.description}
+                    </CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4 text-sm text-neutral-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      {t("events", { count: totalEvents })}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users className="h-4 w-4" />
+                      {t("members")} ({memberCount})
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-400 mt-2">
+                    {locale === "fr" ? "Créé le" : "Created"}{" "}
+                    {formatDate(space.created_at, locale as "fr" | "en")}
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
         </div>
       )}
     </div>

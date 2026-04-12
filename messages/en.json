@@ -64,7 +64,10 @@
     "settings": "Settings",
     "myEvents": "My events",
     "logout": "Logout",
-    "profile": "Profile"
+    "profile": "Profile",
+    "noEvents": "No events",
+    "newSpace": "New space",
+    "dashboard": "Dashboard"
   },
   "auth": {
     "login": "Login",
@@ -105,7 +108,13 @@
     "emailAlreadyExists": "An account already exists with this email",
     "emailConfirmTitle": "Check your email",
     "emailConfirmDescription": "A confirmation link has been sent to",
-    "emailConfirmHint": "Already have an account?"
+    "emailConfirmHint": "Already have an account?",
+    "usageType": "You're using ORKESTR for",
+    "usagePersonal": "Personal",
+    "usageProfessional": "Professional",
+    "organizationName": "Organization name",
+    "organizationNamePlaceholder": "E.g. Startup Weekend NYC",
+    "organizationNameRequired": "Organization name is required"
   },
   "spaces": {
     "title": "My spaces",
@@ -144,12 +153,12 @@
     "types": {
       "hackathon": "Hackathon",
       "bootcamp": "Bootcamp",
-      "programme": "Programme"
+      "cohort": "Cohort"
     },
     "typeDescriptions": {
       "hackathon": "Team competition with jury and scoring",
       "bootcamp": "Individual step-by-step journey with work collection",
-      "programme": "Periodic reporting and KPI tracking over several months"
+      "cohort": "Periodic reporting and KPI tracking over several months"
     },
     "startDate": "Start date",
     "endDate": "End date",
@@ -169,6 +178,10 @@
     "activate": "Activate event",
     "complete": "Complete event",
     "archive": "Archive",
+    "maxParticipants": "Maximum number of participants",
+    "maxParticipantsPlaceholder": "E.g. 100",
+    "teamsEnabled": "Organize participants into teams",
+    "teamsEnabledDescription": "Participants will be grouped into teams. Enabled by default for hackathons.",
     "deleteConfirm": "Are you sure you want to delete this event?",
     "created": "Event created successfully",
     "updated": "Event updated",
@@ -179,7 +192,15 @@
     "add": "Add participant",
     "invite": "Invite by email",
     "importCsv": "Import CSV",
-    "csvTemplate": "Download CSV template",
+    "csvTemplate": "CSV Template",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "projectTitle": "Project title",
+    "projectDescription": "Project description",
+    "projectDescriptionPlaceholder": "Describe your idea in a few sentences... (max 500 characters)",
+    "skills": "Skills",
+    "skillsPlaceholder": "E.g. React, Python, Design",
     "name": "Full name",
     "email": "Email",
     "status": "Status",
@@ -444,11 +465,12 @@
       "bootcampFeature2": "Submissions (file, URL, form)",
       "bootcampFeature3": "Organizer validation",
       "bootcampFeature4": "Progress tracking",
-      "programmeDesc": "Drive your mentoring programs over months with periodic reporting and multi-cohort management.",
-      "programmeFeature1": "Multi-cohort",
-      "programmeFeature2": "Periodic reporting",
-      "programmeFeature3": "Custom KPIs",
-      "programmeFeature4": "Global organizer view"
+      "cohortLabel": "Cohort",
+      "cohortDesc": "Drive your mentoring programs over months with periodic reporting and multi-cohort management.",
+      "cohortFeature1": "Multi-cohort",
+      "cohortFeature2": "Periodic reporting",
+      "cohortFeature3": "Custom KPIs",
+      "cohortFeature4": "Global organizer view"
     },
     "how": {
       "title": "Up and running in 3 steps",
@@ -466,7 +488,7 @@
       "stat2Value": "100%",
       "stat2Label": "of operational flows automated",
       "stat3Value": "3-in-1",
-      "stat3Label": "hackathon, bootcamp, program"
+      "stat3Label": "hackathon, bootcamp, cohort"
     },
     "pricing": {
       "title": "Simple, transparent pricing",

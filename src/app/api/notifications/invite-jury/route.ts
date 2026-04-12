@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { sendJuryInviteEmail } from "@/lib/resend";
 
 export async function POST(request: NextRequest) {
@@ -10,13 +10,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const supabase = await createAdminClient();
-
-    // Vérification auth
-    const { data: { user } } = await supabase.auth.getUser();
+    // Client anon pour récupérer la session utilisateur
+    const anonClient = await createClient();
+    const { data: { user } } = await anonClient.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // Client admin pour les opérations DB privilégiées
+    const supabase = await createAdminClient();
 
     // Vérification droits : l'user doit être space_owner ou space_member de l'espace de l'événement
     const { data: event } = await supabase

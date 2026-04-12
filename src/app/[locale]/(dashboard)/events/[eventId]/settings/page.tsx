@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { EventSidebar } from "@/components/layout/Sidebar";
@@ -29,8 +29,7 @@ export default function EventSettingsPage({ params: paramsPromise }: EventSettin
   const t = useTranslations("events");
   const tCommon = useTranslations("common");
   const router = useRouter();
-  const [locale, setLocale] = useState("fr");
-  const [eventId, setEventId] = useState("");
+  const { locale, eventId } = useParams<{ locale: string; eventId: string }>();
   const [event, setEvent] = useState<{
     id: string;
     name: string;
@@ -45,17 +44,16 @@ export default function EventSettingsPage({ params: paramsPromise }: EventSettin
   const supabase = createClient();
 
   useEffect(() => {
-    paramsPromise.then(async ({ locale: l, eventId: id }) => {
-      setLocale(l);
-      setEventId(id);
+    const load = async () => {
       const { data } = await supabase
         .from("events")
         .select("id, name, description, type, status, start_date, end_date")
-        .eq("id", id)
+        .eq("id", eventId)
         .single();
       if (data) setEvent(data as typeof event);
-    });
-  }, []);
+    };
+    if (eventId) load();
+  }, [eventId]);
 
   const handleSave = async () => {
     if (!event) return;

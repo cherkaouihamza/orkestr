@@ -15,23 +15,24 @@ export default async function ParticipantsPage({ params }: ParticipantsPageProps
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, name, type")
+    .select("id, name, type, settings, spaces(name)")
     .eq("id", eventId)
     .single();
 
   if (!event) notFound();
 
-  const { data: participants } = await supabase
-    .from("participants")
-    .select(`
-      *,
-      team_members(
-        team_id,
-        teams(id, name)
-      )
-    `)
-    .eq("event_id", eventId)
-    .order("invited_at", { ascending: false });
+  const [{ data: participants }, { data: teams }] = await Promise.all([
+    supabase
+      .from("participants")
+      .select(`*, team_members(team_id, teams(id, name))`)
+      .eq("event_id", eventId)
+      .order("invited_at", { ascending: false }),
+    supabase
+      .from("teams")
+      .select("id, name")
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: true }),
+  ]);
 
   return (
     <div className="flex gap-0">
@@ -41,6 +42,10 @@ export default async function ParticipantsPage({ params }: ParticipantsPageProps
           locale={locale}
           eventId={eventId}
           eventName={event.name}
+          eventType={event.type as EventType}
+          spaceName={(event.spaces as { name: string } | null)?.name ?? ""}
+          teamsEnabled={(event.settings as Record<string, unknown> | null)?.teamsEnabled !== false}
+          teams={teams ?? []}
           participants={participants ?? []}
         />
       </div>

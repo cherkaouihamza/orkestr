@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -48,8 +50,19 @@ export default async function EventOverviewPage({ params }: EventOverviewProps) 
 
   const activateEvent = async () => {
     "use server";
+    console.log("[activateEvent] Attempting to activate event:", eventId);
     const supabase = await createClient();
-    await supabase.from("events").update({ status: "active" }).eq("id", eventId);
+    const { error } = await supabase
+      .from("events")
+      .update({ status: "active" })
+      .eq("id", eventId);
+    if (error) {
+      console.error("[activateEvent] Supabase error:", error.message, error.code, error.details);
+      return;
+    }
+    console.log("[activateEvent] Success — event", eventId, "is now active");
+    revalidatePath("/", "layout");
+    redirect(`/${locale}/events/${eventId}/overview`);
   };
 
   return (

@@ -6,7 +6,7 @@ import { createServerClient } from "@supabase/ssr";
 const intlMiddleware = createMiddleware(routing);
 
 // Routes accessibles sans authentification
-const publicRoutes = ["/", "/login", "/register", "/invite"];
+const publicRoutes = ["/", "/login", "/register", "/invite", "/auth/callback", "/onboarding"];
 
 function isPublicRoute(pathname: string): boolean {
   const strippedPath = pathname.replace(/^\/(fr|en)/, "") || "/";

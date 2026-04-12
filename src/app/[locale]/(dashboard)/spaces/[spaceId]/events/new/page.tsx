@@ -13,17 +13,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2, ArrowLeft, Trophy, Zap, LayoutGrid, Check } from "lucide-react";
+import { Loader2, ArrowLeft, Trophy, Zap, Users2, Check } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
 import type { EventType } from "@/types/database";
 
 const eventSchema = z.object({
   name: z.string().min(2).max(200),
   description: z.string().max(2000).optional(),
-  type: z.enum(["hackathon", "bootcamp", "programme"]),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
+  type: z.enum(["hackathon", "bootcamp", "cohort"]),
+  startDate: z.string().min(1, "required"),
+  endDate: z.string().min(1, "required"),
+  maxParticipants: z.coerce.number().int().min(1).optional(),
 });
 
 type EventForm = z.infer<typeof eventSchema>;
@@ -35,7 +37,7 @@ const EVENT_TYPES: Array<{
 }> = [
   { value: "hackathon", icon: Trophy, color: "text-accent" },
   { value: "bootcamp", icon: Zap, color: "text-blue-500" },
-  { value: "programme", icon: LayoutGrid, color: "text-purple-500" },
+  { value: "cohort", icon: Users2, color: "text-purple-500" },
 ];
 
 export default function NewEventPage() {
@@ -45,6 +47,8 @@ export default function NewEventPage() {
   const { locale, spaceId } = useParams<{ locale: string; spaceId: string }>();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<EventType>("hackathon");
+  const [maxParticipants, setMaxParticipants] = useState<string>("");
+  const [teamsEnabled, setTeamsEnabled] = useState(true);
 
   const {
     register,
@@ -74,13 +78,17 @@ export default function NewEventPage() {
           status: "draft",
           start_date: data.startDate || null,
           end_date: data.endDate || null,
-          settings: {},
+          settings: {
+            teamsEnabled,
+            ...(data.maxParticipants ? { maxParticipants: data.maxParticipants } : {}),
+          },
           created_by: user.id,
         })
         .select()
         .single();
 
       if (error) {
+        console.error("Event creation error:", error);
         toast({ title: tCommon("errorOccurred"), variant: "destructive" });
         return;
       }
@@ -120,6 +128,7 @@ export default function NewEventPage() {
                   onClick={() => {
                     setSelectedType(value);
                     setValue("type", value);
+                    setTeamsEnabled(value === "hackathon");
                   }}
                   className={cn(
                     "relative flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all text-center",
@@ -144,6 +153,26 @@ export default function NewEventPage() {
                   </div>
                 </button>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Gestion par équipes */}
+        <Card>
+          <CardContent className="py-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-neutral-900">
+                  {t("teamsEnabled")}
+                </p>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  {t("teamsEnabledDescription")}
+                </p>
+              </div>
+              <Switch
+                checked={teamsEnabled}
+                onCheckedChange={setTeamsEnabled}
+              />
             </div>
           </CardContent>
         </Card>
@@ -180,13 +209,29 @@ export default function NewEventPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startDate">{t("startDate")}</Label>
+                <Label htmlFor="startDate">{t("startDate")} *</Label>
                 <Input id="startDate" type="datetime-local" {...register("startDate")} />
+                {errors.startDate && <p className="text-xs text-error">{tCommon("required")}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="endDate">{t("endDate")}</Label>
+                <Label htmlFor="endDate">{t("endDate")} *</Label>
                 <Input id="endDate" type="datetime-local" {...register("endDate")} />
+                {errors.endDate && <p className="text-xs text-error">{tCommon("required")}</p>}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maxParticipants">
+                {t("maxParticipants")}{" "}
+                <span className="text-neutral-400">({tCommon("optional")})</span>
+              </Label>
+              <Input
+                id="maxParticipants"
+                type="number"
+                min={1}
+                placeholder={t("maxParticipantsPlaceholder")}
+                {...register("maxParticipants")}
+              />
             </div>
           </CardContent>
         </Card>

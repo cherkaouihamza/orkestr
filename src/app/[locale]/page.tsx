@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Trophy,
   Zap,
-  LayoutGrid,
+  Users2,
   ArrowRight,
   CheckCircle,
   Layers,
@@ -37,11 +37,11 @@ export default async function HomePage({ params }: HomePageProps) {
     t("features.bootcampFeature4"),
   ];
 
-  const programmeFeatures = [
-    t("features.programmeFeature1"),
-    t("features.programmeFeature2"),
-    t("features.programmeFeature3"),
-    t("features.programmeFeature4"),
+  const cohortFeatures = [
+    t("features.cohortFeature1"),
+    t("features.cohortFeature2"),
+    t("features.cohortFeature3"),
+    t("features.cohortFeature4"),
   ];
 
   const freeFeatures = [
@@ -250,17 +250,17 @@ export default async function HomePage({ params }: HomePageProps) {
               </ul>
             </div>
 
-            {/* Programme */}
+            {/* Cohorte */}
             <div className="bg-white rounded-2xl border border-neutral-200 p-8 hover:shadow-lg transition-shadow group">
               <div className="w-14 h-14 bg-purple-50 rounded-xl flex items-center justify-center mb-6 group-hover:bg-purple-100 transition-colors">
-                <LayoutGrid className="h-7 w-7 text-purple-500" />
+                <Users2 className="h-7 w-7 text-purple-500" />
               </div>
-              <h3 className="font-sora font-bold text-xl text-primary-900 mb-3">Programme</h3>
+              <h3 className="font-sora font-bold text-xl text-primary-900 mb-3">{t("features.cohortLabel")}</h3>
               <p className="text-neutral-500 text-sm mb-6 leading-relaxed">
-                {t("features.programmeDesc")}
+                {t("features.cohortDesc")}
               </p>
               <ul className="space-y-2.5">
-                {programmeFeatures.map((item) => (
+                {cohortFeatures.map((item) => (
                   <li key={item} className="flex items-center gap-2.5 text-sm text-neutral-700">
                     <CheckCircle className="h-4 w-4 text-success flex-shrink-0" />
                     {item}

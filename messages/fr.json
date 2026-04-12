@@ -64,7 +64,10 @@
     "settings": "Paramètres",
     "myEvents": "Mes événements",
     "logout": "Déconnexion",
-    "profile": "Profil"
+    "profile": "Profil",
+    "noEvents": "Aucun événement",
+    "newSpace": "Nouvel espace",
+    "dashboard": "Vue d'ensemble"
   },
   "auth": {
     "login": "Connexion",
@@ -105,7 +108,13 @@
     "emailAlreadyExists": "Un compte existe déjà avec cet email",
     "emailConfirmTitle": "Vérifiez votre email",
     "emailConfirmDescription": "Un lien de confirmation a été envoyé à",
-    "emailConfirmHint": "Déjà un compte ?"
+    "emailConfirmHint": "Déjà un compte ?",
+    "usageType": "Vous utilisez ORKESTR pour",
+    "usagePersonal": "Personnel",
+    "usageProfessional": "Professionnel",
+    "organizationName": "Nom de l'organisation",
+    "organizationNamePlaceholder": "Ex : Startup Weekend France",
+    "organizationNameRequired": "Le nom de l'organisation est requis"
   },
   "spaces": {
     "title": "Mes espaces",
@@ -144,12 +153,12 @@
     "types": {
       "hackathon": "Hackathon",
       "bootcamp": "Bootcamp",
-      "programme": "Programme"
+      "cohort": "Cohorte"
     },
     "typeDescriptions": {
       "hackathon": "Compétition par équipes avec jury et notation",
       "bootcamp": "Parcours individuel par étapes avec collecte de travaux",
-      "programme": "Reporting périodique et suivi de KPIs sur plusieurs mois"
+      "cohort": "Reporting périodique et suivi de KPIs sur plusieurs mois"
     },
     "startDate": "Date de début",
     "endDate": "Date de fin",
@@ -169,6 +178,10 @@
     "activate": "Activer l'événement",
     "complete": "Terminer l'événement",
     "archive": "Archiver",
+    "maxParticipants": "Nombre maximum de participants",
+    "maxParticipantsPlaceholder": "Ex : 100",
+    "teamsEnabled": "Organiser les participants en équipes",
+    "teamsEnabledDescription": "Les participants seront regroupés en équipes. Activé par défaut pour les hackathons.",
     "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet événement ?",
     "created": "Événement créé avec succès",
     "updated": "Événement mis à jour",
@@ -179,7 +192,15 @@
     "add": "Ajouter un participant",
     "invite": "Inviter par email",
     "importCsv": "Importer CSV",
-    "csvTemplate": "Télécharger le modèle CSV",
+    "csvTemplate": "Modèle CSV",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "phone": "Téléphone",
+    "projectTitle": "Titre du projet",
+    "projectDescription": "Description du projet",
+    "projectDescriptionPlaceholder": "Décrivez votre idée en quelques phrases... (max 500 caractères)",
+    "skills": "Compétences",
+    "skillsPlaceholder": "Ex : React, Python, Design",
     "name": "Nom complet",
     "email": "Email",
     "status": "Statut",
@@ -389,7 +410,7 @@
       "noSpace": "Vous pouvez créer un espace à tout moment depuis le tableau de bord.",
       "nextStepsLabel": "Prochaines étapes suggérées",
       "action1Title": "Créer un événement",
-      "action1Desc": "Lancez un hackathon, bootcamp ou programme en quelques minutes.",
+      "action1Desc": "Lancez un hackathon, bootcamp ou cohorte en quelques minutes.",
       "action2Title": "Inviter des collaborateurs",
       "action2Desc": "Ajoutez des membres à votre espace pour travailler en équipe.",
       "action3Title": "Explorer votre espace",
@@ -422,7 +443,7 @@
     "hero": {
       "badge": "Plateforme opérationnelle tout-en-un",
       "titleStart": "Gérez vos",
-      "titleEnd": "bootcamps et programmes",
+      "titleEnd": "bootcamps et cohortes",
       "subtitle": "ORKESTR centralise la gestion opérationnelle de vos événements : participants, équipes, jalons, soumissions et jury — tout au même endroit.",
       "ctaPrimary": "Commencer gratuitement",
       "ctaSecondary": "Voir les fonctionnalités",
@@ -432,7 +453,7 @@
     },
     "features": {
       "title": "Adapté à chaque format",
-      "subtitle": "Que vous organisiez un hackathon de 48h ou un programme de 6 mois, ORKESTR s'adapte à votre format.",
+      "subtitle": "Que vous organisiez un hackathon de 48h ou une cohorte de 6 mois, ORKESTR s'adapte à votre format.",
       "popularBadge": "Le plus populaire",
       "hackathonDesc": "Organisez des compétitions avec gestion d'équipes, jury multi-critères et classement automatique en temps réel.",
       "hackathonFeature1": "Gestion des équipes",
@@ -444,11 +465,12 @@
       "bootcampFeature2": "Soumissions (fichier, URL, formulaire)",
       "bootcampFeature3": "Validation par l'organisateur",
       "bootcampFeature4": "Suivi de progression",
-      "programmeDesc": "Pilotez vos programmes d'accompagnement sur plusieurs mois avec reporting périodique et gestion multi-cohortes.",
-      "programmeFeature1": "Multi-cohortes",
-      "programmeFeature2": "Reporting périodique",
-      "programmeFeature3": "KPIs personnalisés",
-      "programmeFeature4": "Vue organisateur globale"
+      "cohortLabel": "Cohorte",
+      "cohortDesc": "Pilotez vos programmes d'accompagnement sur plusieurs mois avec reporting périodique et gestion multi-cohortes.",
+      "cohortFeature1": "Multi-cohortes",
+      "cohortFeature2": "Reporting périodique",
+      "cohortFeature3": "KPIs personnalisés",
+      "cohortFeature4": "Vue organisateur globale"
     },
     "how": {
       "title": "Opérationnel en 3 étapes",
@@ -466,7 +488,7 @@
       "stat2Value": "100%",
       "stat2Label": "des flux opérationnels automatisés",
       "stat3Value": "3-en-1",
-      "stat3Label": "hackathon, bootcamp, programme"
+      "stat3Label": "hackathon, bootcamp, cohorte"
     },
     "pricing": {
       "title": "Tarifs simples et transparents",
@@ -506,7 +528,7 @@
     },
     "ctaSection": {
       "title": "Prêt à lancer votre prochain événement ?",
-      "subtitle": "Rejoignez les organisateurs qui font confiance à ORKESTR pour piloter leurs hackathons, bootcamps et programmes d'accompagnement.",
+      "subtitle": "Rejoignez les organisateurs qui font confiance à ORKESTR pour piloter leurs hackathons, bootcamps et cohortes.",
       "primary": "Créer mon compte gratuitement",
       "secondary": "Se connecter"
     },

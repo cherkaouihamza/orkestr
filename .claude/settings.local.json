@@ -10,7 +10,10 @@
       "Bash(npm install:*)",
       "Bash(wait:*)",
       "Bash(npm run:*)",
-      "Bash(grep -E \"\\\\.\\(ts|tsx|json\\)$\")"
+      "Bash(grep -E \"\\\\.\\(ts|tsx|json\\)$\")",
+      "Bash(npx shadcn@latest add tooltip --yes)",
+      "Bash(npm list:*)",
+      "Bash(npx shadcn@latest add switch --yes)"
     ]
   }
 }

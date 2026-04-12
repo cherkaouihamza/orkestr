@@ -45,6 +45,7 @@ export function ParticipantMilestoneCard({
 }: ParticipantMilestoneCardProps) {
   const t = useTranslations("submissions");
   const tMilestones = useTranslations("milestones");
+  const tCommon = useTranslations("common");
   const [submission, setSubmission] = useState(initialSubmission);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -93,7 +94,7 @@ export function ParticipantMilestoneCard({
           .upload(path, file);
 
         if (uploadError) {
-          toast({ title: t("submitted"), variant: "destructive" });
+          toast({ title: tCommon("errorOccurred"), variant: "destructive" });
           return;
         }
 
@@ -113,9 +114,10 @@ export function ParticipantMilestoneCard({
         if (error) throw error;
         setSubmission(data);
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await supabase
           .from("submissions")
-          .insert(submissionData as Parameters<typeof supabase.from>[0] extends "submissions" ? never : never)
+          .insert(submissionData as any)
           .select()
           .single();
 
@@ -126,7 +128,7 @@ export function ParticipantMilestoneCard({
       toast({ title: t("submitted") });
       setIsExpanded(false);
     } catch {
-      toast({ title: t("submitted"), variant: "destructive" });
+      toast({ title: tCommon("errorOccurred"), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }

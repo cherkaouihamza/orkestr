@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { EventSidebar } from "@/components/layout/Sidebar";
 import { TeamsClient } from "@/components/events/TeamsClient";
+import { TeamsDisabled } from "@/components/events/TeamsDisabled";
 import type { EventType } from "@/types/database";
 
 export default async function TeamsPage({
@@ -14,11 +15,14 @@ export default async function TeamsPage({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, name, type, settings")
+    .select("id, name, type, settings, spaces(name)")
     .eq("id", eventId)
     .single();
 
-  if (!event || event.type !== "hackathon") notFound();
+  if (!event) notFound();
+
+  const settings = event.settings as Record<string, unknown> | null;
+  const teamsEnabled = settings?.teamsEnabled !== false;
 
   const [{ data: teams }, { data: participants }] = await Promise.all([
     supabase
@@ -29,20 +33,25 @@ export default async function TeamsPage({
     supabase
       .from("participants")
       .select("id, first_name, last_name, email, status")
-      .eq("event_id", eventId)
-      .in("status", ["registered", "active"]),
+      .eq("event_id", eventId),
   ]);
 
   return (
     <div className="flex gap-0">
       <EventSidebar locale={locale} eventId={eventId} eventType={event.type as EventType} />
       <div className="flex-1 p-6">
-        <TeamsClient
-          locale={locale}
-          eventId={eventId}
-          teams={teams ?? []}
-          participants={participants ?? []}
-        />
+        {!teamsEnabled ? (
+          <TeamsDisabled locale={locale} eventId={eventId} />
+        ) : (
+          <TeamsClient
+            locale={locale}
+            eventId={eventId}
+            eventName={event.name}
+            spaceName={(event.spaces as { name: string } | null)?.name ?? ""}
+            teams={teams ?? []}
+            participants={participants ?? []}
+          />
+        )}
       </div>
     </div>
   );

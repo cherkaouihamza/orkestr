@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Plus, Calendar, Users, Trophy, Zap, LayoutGrid } from "lucide-react";
+import { Plus, Calendar, Users, Trophy, Zap, LayoutGrid, Users2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,10 +13,11 @@ interface SpacePageProps {
   params: Promise<{ locale: string; spaceId: string }>;
 }
 
-const EVENT_TYPE_ICONS: Record<EventType, React.ComponentType<{ className?: string }>> = {
+const EVENT_TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   hackathon: Trophy,
   bootcamp: Zap,
-  programme: LayoutGrid,
+  cohort: Users2,
+  programme: Users2, // fallback for legacy DB rows
 };
 
 export default async function SpacePage({ params }: SpacePageProps) {
@@ -104,7 +105,7 @@ export default async function SpacePage({ params }: SpacePageProps) {
       ) : (
         <div className="space-y-3">
           {events.map((event) => {
-            const Icon = EVENT_TYPE_ICONS[event.type as EventType];
+            const Icon = EVENT_TYPE_ICONS[event.type] ?? LayoutGrid;
             return (
               <Link
                 key={event.id}

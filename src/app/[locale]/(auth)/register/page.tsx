@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, MailCheck } from "lucide-react";
+import { Loader2, MailCheck, User, Building2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const registerSchema = z
   .object({
@@ -21,18 +22,28 @@ const registerSchema = z
     email: z.string().email(),
     password: z.string().min(8),
     confirmPassword: z.string(),
+    usageType: z.enum(["personal", "professional"]),
+    organizationName: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "passwordMismatch",
     path: ["confirmPassword"],
-  });
+  })
+  .refine(
+    (data) =>
+      data.usageType !== "professional" ||
+      (data.organizationName && data.organizationName.trim().length > 0),
+    {
+      message: "organizationNameRequired",
+      path: ["organizationName"],
+    }
+  );
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterPage({ params }: { params: Promise<{ locale: string }> }) {
   const t = useTranslations("auth");
   const { locale } = useParams<{ locale: string }>();
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
@@ -41,17 +52,21 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
   const {
     register,
     handleSubmit,
+    control,
+    watch,
     formState: { errors },
-  } = useForm<RegisterForm>({ resolver: zodResolver(registerSchema) });
+  } = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { usageType: "personal" },
+  });
 
+  const usageType = watch("usageType");
   const supabase = createClient();
 
   const onSubmit = async (data: RegisterForm) => {
     setEmailExists(false);
     setIsLoading(true);
     try {
-      // 1. Inscription — first_name/last_name dans options.data pour le trigger
-      // En prod, emailRedirectTo envoie l'user vers /onboarding après confirmation
       const { data: signUpData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -70,31 +85,26 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
       }
 
       // Supabase retourne user.identities = [] quand l'email est déjà enregistré
-      // (fonctionne en dev et en prod, contrairement au message d'erreur)
       if (signUpData.user && signUpData.user.identities?.length === 0) {
         setEmailExists(true);
         return;
       }
 
-      // 2. Sauvegarde explicite de first_name/last_name dans profiles
-      // En dev : session disponible immédiatement → update possible
-      // En prod : pas de session avant confirmation → le trigger handle_new_user()
-      //           lit raw_user_meta_data et crée le profil avec les bons noms
+      // Sauvegarde usage_type et organization_name dans profiles
+      // En dev la session est disponible immédiatement ; en prod le trigger
+      // handle_new_user() crée le profil, on update ensuite si session dispo
       if (signUpData.user && signUpData.session) {
         await supabase
           .from("profiles")
-          .update({ first_name: data.firstName, last_name: data.lastName })
+          .update({
+            usage_type: data.usageType,
+            organization_name: data.usageType === "professional" ? data.organizationName : null,
+          })
           .eq("id", signUpData.user.id);
       }
 
-      // TODO(production): supprimer le bloc dev et laisser uniquement setEmailSent(true)
-      if (process.env.NODE_ENV === "production") {
-        setRegisteredEmail(data.email);
-        setEmailSent(true);
-      } else {
-        // Dev : redirection directe, pas d'attente de confirmation email
-        router.push(`/${locale}/onboarding`);
-      }
+      setRegisteredEmail(data.email);
+      setEmailSent(true);
     } finally {
       setIsLoading(false);
     }
@@ -135,6 +145,8 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+          {/* Prénom / Nom */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="firstName">{t("firstName")}</Label>
@@ -152,6 +164,7 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
             </div>
           </div>
 
+          {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="email">{t("email")}</Label>
             <Input
@@ -173,6 +186,7 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
             )}
           </div>
 
+          {/* Mot de passe */}
           <div className="space-y-2">
             <Label htmlFor="password">{t("password")}</Label>
             <Input
@@ -199,6 +213,69 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
               <p className="text-xs text-error">{t("passwordMismatch")}</p>
             )}
           </div>
+
+          {/* Usage type */}
+          <div className="space-y-2">
+            <Label>{t("usageType")}</Label>
+            <Controller
+              name="usageType"
+              control={control}
+              render={({ field }) => (
+                <div className="grid grid-cols-2 gap-3">
+                  {(["personal", "professional"] as const).map((type) => {
+                    const Icon = type === "personal" ? User : Building2;
+                    const label = type === "personal" ? t("usagePersonal") : t("usageProfessional");
+                    const selected = field.value === type;
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => field.onChange(type)}
+                        className={cn(
+                          "relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center",
+                          selected
+                            ? "border-accent bg-orange-50"
+                            : "border-neutral-200 hover:border-neutral-300 bg-white"
+                        )}
+                      >
+                        <Icon
+                          className={cn(
+                            "h-6 w-6",
+                            selected ? "text-accent" : "text-neutral-400"
+                          )}
+                        />
+                        <span
+                          className={cn(
+                            "text-sm font-medium",
+                            selected ? "text-accent" : "text-neutral-600"
+                          )}
+                        >
+                          {label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            />
+          </div>
+
+          {/* Nom organisation (conditionnel) */}
+          {usageType === "professional" && (
+            <div className="space-y-2">
+              <Label htmlFor="organizationName">
+                {t("organizationName")} *
+              </Label>
+              <Input
+                id="organizationName"
+                placeholder={t("organizationNamePlaceholder")}
+                {...register("organizationName")}
+              />
+              {errors.organizationName && (
+                <p className="text-xs text-error">{t("organizationNameRequired")}</p>
+              )}
+            </div>
+          )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}

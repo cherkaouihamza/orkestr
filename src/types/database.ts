@@ -1,5 +1,5 @@
 export type UserRole = "space_owner" | "space_manager" | "jury" | "participant";
-export type EventType = "hackathon" | "bootcamp" | "programme";
+export type EventType = "hackathon" | "bootcamp" | "cohort";
 export type EventStatus = "draft" | "active" | "completed" | "archived";
 export type ParticipantStatus = "invited" | "registered" | "active" | "completed" | "dropped";
 export type MilestoneType = "file" | "form" | "url" | "text";
