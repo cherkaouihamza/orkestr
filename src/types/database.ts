@@ -8,10 +8,14 @@ export type SubmissionStatus = "not_submitted" | "submitted" | "validated" | "re
 export type FormFieldType =
   | "short_text"
   | "long_text"
+  | "number"
+  | "date"
   | "file"
   | "url"
+  | "radio"
   | "multiple_choice"
-  | "checkbox";
+  | "checkbox"
+  | "rating";
 export type NotificationType =
   | "welcome"
   | "milestone_open"
@@ -244,6 +248,7 @@ export interface Milestone {
   close_at: string | null;
   order_index: number;
   allow_late_submission: boolean;
+  settings: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }

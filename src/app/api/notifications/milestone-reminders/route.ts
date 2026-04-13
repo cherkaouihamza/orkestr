@@ -1,55 +1,81 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
-import { sendMilestoneReminderEmail, sendMilestoneOverdueEmail } from "@/lib/resend";
+import { sendMilestoneReminderEmail } from "@/lib/resend";
 
-// Cron job: appelé par Vercel Cron toutes les heures
+// Cron: 0 9 * * * — runs once daily at 9:00 UTC
+// Sends reminders at J-7, J-3, J-1 before close_at, with dedup via notifications table
+
+const REMINDER_WINDOWS = [
+  { daysBeforeClose: 7, label: "7d" },
+  { daysBeforeClose: 3, label: "3d" },
+  { daysBeforeClose: 1, label: "1d" },
+];
+
 export async function GET(request: NextRequest) {
-  // Vérifier l'autorisation (Vercel Cron secret)
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const supabase = await createAdminClient();
-
-  // Jalons qui ferment dans 48h (rappel)
-  const in48h = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
-  const now = new Date().toISOString();
-
-  const { data: upcomingMilestones } = await supabase
-    .from("milestones")
-    .select(`
-      *,
-      events(id, name),
-      submissions(participant_id, team_id, status)
-    `)
-    .eq("status", "open")
-    .gte("close_at", now)
-    .lte("close_at", in48h);
-
   let remindersCount = 0;
 
-  for (const milestone of upcomingMilestones ?? []) {
-    const event = milestone.events as { id: string; name: string };
+  for (const window of REMINDER_WINDOWS) {
+    const windowStart = new Date(Date.now() + (window.daysBeforeClose - 0.5) * 24 * 60 * 60 * 1000).toISOString();
+    const windowEnd = new Date(Date.now() + (window.daysBeforeClose + 0.5) * 24 * 60 * 60 * 1000).toISOString();
 
-    // Participants sans soumission
-    const { data: participants } = await supabase
-      .from("participants")
-      .select("id, email, first_name, preferred_locale:profiles(preferred_locale)")
-      .eq("event_id", event.id)
-      .in("status", ["active", "registered"]);
+    const { data: milestones } = await supabase
+      .from("milestones")
+      .select("id, name, event_id, close_at, events(id, name)")
+      .eq("status", "open")
+      .gte("close_at", windowStart)
+      .lte("close_at", windowEnd);
 
-    const submittedParticipantIds = new Set(
-      (milestone.submissions as Array<{ participant_id: string | null }>)
-        ?.filter((s) => s.participant_id)
-        .map((s) => s.participant_id)
-    );
+    for (const milestone of milestones ?? []) {
+      const event = milestone.events as { id: string; name: string } | null;
+      if (!event) continue;
 
-    for (const participant of participants ?? []) {
-      if (!submittedParticipantIds.has(participant.id)) {
-        const locale =
-          ((participant as { preferred_locale?: { preferred_locale?: string } }).preferred_locale
-            ?.preferred_locale as "fr" | "en") ?? "fr";
+      // Get participants who haven't submitted
+      const { data: participants } = await supabase
+        .from("participants")
+        .select("id, email, first_name, user_id")
+        .eq("event_id", event.id)
+        .in("status", ["active", "registered"]);
+
+      const { data: submissions } = await supabase
+        .from("submissions")
+        .select("participant_id")
+        .eq("milestone_id", milestone.id)
+        .not("status", "eq", "not_submitted");
+
+      const submittedIds = new Set((submissions ?? []).map((s) => s.participant_id));
+
+      // Already-sent dedup: check notifications table
+      const { data: alreadySent } = await supabase
+        .from("notifications")
+        .select("participant_id")
+        .eq("milestone_id", milestone.id)
+        .eq("type", "milestone_reminder")
+        .like("body", `%${window.label}%`);
+
+      const alreadySentIds = new Set((alreadySent ?? []).map((n) => n.participant_id));
+
+      for (const participant of participants ?? []) {
+        if (submittedIds.has(participant.id)) continue;
+        if (alreadySentIds.has(participant.id)) continue;
+
+        // Resolve locale from user profile
+        let locale: "fr" | "en" = "fr";
+        if (participant.user_id) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("preferred_locale")
+            .eq("id", participant.user_id)
+            .single();
+          if (profile?.preferred_locale) locale = profile.preferred_locale as "fr" | "en";
+        }
+
+        const milestoneUrl = `${process.env.NEXT_PUBLIC_APP_URL}/${locale}/my-events/${event.id}`;
 
         await sendMilestoneReminderEmail({
           email: participant.email,
@@ -60,46 +86,20 @@ export async function GET(request: NextRequest) {
           eventId: event.id,
           locale,
         });
-        remindersCount++;
-      }
-    }
-  }
 
-  // Jalons fermés J+1 avec non-soumissions
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data: closedMilestones } = await supabase
-    .from("milestones")
-    .select(`*, events(id, name)`)
-    .eq("status", "closed")
-    .gte("close_at", yesterday)
-    .lte("close_at", now);
-
-  for (const milestone of closedMilestones ?? []) {
-    const event = milestone.events as { id: string; name: string };
-
-    const { data: participants } = await supabase
-      .from("participants")
-      .select("id, email, first_name")
-      .eq("event_id", event.id)
-      .in("status", ["active", "registered"]);
-
-    const { data: milestoneSubmissions } = await supabase
-      .from("submissions")
-      .select("participant_id")
-      .eq("milestone_id", milestone.id)
-      .not("status", "eq", "not_submitted");
-
-    const submittedIds = new Set(milestoneSubmissions?.map((s) => s.participant_id));
-
-    for (const participant of participants ?? []) {
-      if (!submittedIds.has(participant.id)) {
-        await sendMilestoneOverdueEmail({
-          email: participant.email,
-          firstName: participant.first_name,
-          milestoneName: milestone.name,
-          eventName: event.name,
-          eventId: event.id,
+        // Record in notifications to prevent duplicate sends
+        await supabase.from("notifications").insert({
+          participant_id: participant.id,
+          event_id: event.id,
+          milestone_id: milestone.id,
+          type: "milestone_reminder",
+          title: locale === "fr"
+            ? `Rappel J-${window.daysBeforeClose} : ${milestone.name}`
+            : `Reminder J-${window.daysBeforeClose}: ${milestone.name}`,
+          body: `${window.label}|${milestoneUrl}`,
+          email_sent_at: new Date().toISOString(),
         });
+
         remindersCount++;
       }
     }

@@ -282,12 +282,30 @@
       "file": "File",
       "url": "URL",
       "multiple_choice": "Multiple choice",
-      "checkbox": "Checkbox"
+      "checkbox": "Checkbox",
+      "number": "Number",
+      "date": "Date",
+      "radio": "Single choice",
+      "rating": "Rating (1-5 stars)"
     },
     "fieldLabel": "Label",
     "fieldPlaceholder": "Placeholder",
     "fieldRequired": "Required field",
-    "fieldOptions": "Options (one per line)"
+    "fieldOptions": "Options (one per line)",
+    "visible": "Visible to participants",
+    "allowLateSubmission": "Allow late submissions",
+    "formTypeInfo": "After creation, configure the form from the milestones view via \"Configure form\".",
+    "formNotConfigured": "Form not configured",
+    "configureForm": "Configure form",
+    "formBuilderTitle": "Form builder",
+    "noFormFields": "No fields — click Add field",
+    "saveForm": "Save form",
+    "viewList": "List",
+    "viewCalendar": "Calendar",
+    "viewTimeline": "Timeline",
+    "importMilestones": "Import milestones",
+    "importTemplate": "Excel template",
+    "importPreview": "Import preview"
   },
   "submissions": {
     "title": "Submissions",

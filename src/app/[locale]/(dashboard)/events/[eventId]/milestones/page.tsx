@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { EventSidebar } from "@/components/layout/Sidebar";
 import { MilestonesClient } from "@/components/milestones/MilestonesClient";
@@ -15,7 +14,7 @@ export default async function MilestonesPage({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, name, type")
+    .select("id, name, type, start_date, end_date")
     .eq("id", eventId)
     .single();
 
@@ -39,6 +38,8 @@ export default async function MilestonesPage({
         <MilestonesClient
           locale={locale}
           eventId={eventId}
+          eventStartDate={event.start_date}
+          eventEndDate={event.end_date}
           milestones={milestones ?? []}
           participantCount={participants?.length ?? 0}
         />

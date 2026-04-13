@@ -279,15 +279,33 @@
     "fieldTypes": {
       "short_text": "Texte court",
       "long_text": "Texte long",
+      "number": "Nombre",
+      "date": "Date",
       "file": "Fichier",
       "url": "URL",
+      "radio": "Choix unique",
       "multiple_choice": "Choix multiple",
-      "checkbox": "Case à cocher"
+      "checkbox": "Case à cocher",
+      "rating": "Note (1-5 étoiles)"
     },
     "fieldLabel": "Label",
     "fieldPlaceholder": "Placeholder",
     "fieldRequired": "Champ requis",
-    "fieldOptions": "Options (une par ligne)"
+    "fieldOptions": "Options (une par ligne)",
+    "visible": "Visible par les participants",
+    "allowLateSubmission": "Autoriser les soumissions tardives",
+    "formTypeInfo": "Après création, configurez le formulaire depuis la vue jalons via \"Configurer le formulaire\".",
+    "formNotConfigured": "Formulaire non configuré",
+    "configureForm": "Configurer le formulaire",
+    "formBuilderTitle": "Constructeur de formulaire",
+    "noFormFields": "Aucun champ — cliquez sur Ajouter un champ",
+    "saveForm": "Enregistrer le formulaire",
+    "viewList": "Liste",
+    "viewCalendar": "Calendrier",
+    "viewTimeline": "Timeline",
+    "importMilestones": "Importer des jalons",
+    "importTemplate": "Modèle Excel",
+    "importPreview": "Prévisualisation de l'import"
   },
   "submissions": {
     "title": "Soumissions",
